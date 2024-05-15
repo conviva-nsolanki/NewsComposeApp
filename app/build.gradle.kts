@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.hilt)
+    id("com.conviva.sdk.android-plugin")
 }
 
 android {
@@ -72,6 +73,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation("com.conviva.sdk:conviva-android-tracker:0.9.0")
     kapt(libs.hilt.android.compiler)
     kapt(libs.androidx.hilt.compiler)
     testImplementation(libs.junit)

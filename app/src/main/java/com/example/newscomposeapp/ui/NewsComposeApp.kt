@@ -1,10 +1,9 @@
 package com.example.newscomposeapp.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +17,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,13 +35,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.conviva.apptracker.controller.TrackerController
 import com.example.newscomposeapp.MainViewModel
 import com.example.newscomposeapp.data.Article
 import com.example.newscomposeapp.ui.theme.NewsComposeAppTheme
+import org.json.JSONObject
 
 @Composable
-fun NewsComposeApp(viewModel: MainViewModel) {
-
+fun NewsComposeApp(viewModel: MainViewModel, trackerController: TrackerController?) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -61,7 +62,8 @@ fun NewsComposeApp(viewModel: MainViewModel) {
                     contentPadding = paddingValues,
                     articles = uiState.articleList,
                     uiState.isLoading,
-                    keyboardController = keyboardController
+                    keyboardController = keyboardController,
+                    trackerController
                 )
             }
         }
@@ -72,7 +74,7 @@ fun NewsComposeApp(viewModel: MainViewModel) {
 fun ComposeSearchBar(
     modifier: Modifier = Modifier,
     onSearchTextChange: (String, Boolean) -> Unit,
-    keyboardController: SoftwareKeyboardController?
+    keyboardController: SoftwareKeyboardController?,
 ) {
 
     var searchText by remember {
@@ -110,8 +112,10 @@ fun ArticlesContent(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     articles: List<Article>,
     isLoading: Boolean,
-    keyboardController: SoftwareKeyboardController?
+    keyboardController: SoftwareKeyboardController?,
+    trackerController: TrackerController?
 ) {
+    TrackScreenView(trackerController, "Search Screen Viewed")
     if (isLoading) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -134,7 +138,8 @@ fun ArticlesContent(
             items(articles) { article ->
                 ArticleContent(
                     modifier = modifier,
-                    article = article
+                    article = article,
+                    trackerController
                 )
             }
         }
@@ -144,10 +149,18 @@ fun ArticlesContent(
 @Composable
 fun ArticleContent(
     modifier: Modifier = Modifier,
-    article: Article
+    article: Article,
+    trackerController: TrackerController? = null
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier.clickable {
+            val json = JSONObject()
+            json.put("title", article.title)
+            trackerController?.trackCustomEvent(
+                "Article Clicked",
+                json
+            )
+        }
     ) {
         ArticleImageContent(
             modifier = modifier,
@@ -204,12 +217,24 @@ fun DescriptionContent(modifier: Modifier = Modifier, description: String) {
 @Composable
 fun PrevArticleContent(modifier: Modifier = Modifier) {
 
-    ArticleContent(article = Article(
-        url = "url",
-        publishDate = "test publish date",
-        title = "Today's top news",
-        abstract = "So many things going on",
-        imageUrl = ""
-    ))
+    ArticleContent(
+        article = Article(
+            url = "url",
+            publishDate = "test publish date",
+            title = "Today's top news",
+            abstract = "So many things going on",
+            imageUrl = ""
+        )
+    )
 
+}
+
+@Composable
+fun TrackScreenView(trackerController: TrackerController?, screenName: String, additionalData: JSONObject = JSONObject()) {
+    DisposableEffect(key1 = Unit) {
+        trackerController?.trackCustomEvent(screenName, additionalData)
+        onDispose {
+            // leave the screen
+        }
+    }
 }
