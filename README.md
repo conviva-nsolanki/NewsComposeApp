@@ -2,8 +2,9 @@
 
 This is a sample app that integrate [ECO Android Sensor](https://github.com/Conviva/conviva-android-appanalytics)
 
-SDK version: v0.9.0
-Plugin version: v0.3.3
+SDK version: `v0.9.0`
+
+Plugin version: `v0.3.3`
 
 ![](sample.gif)
 
