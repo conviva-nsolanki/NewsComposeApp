@@ -1,9 +1,13 @@
 package com.example.newscomposeapp.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -24,10 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +44,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.conviva.apptracker.controller.TrackerController
 import com.example.newscomposeapp.MainViewModel
+import com.example.newscomposeapp.R
 import com.example.newscomposeapp.data.Article
 import com.example.newscomposeapp.ui.theme.NewsComposeAppTheme
 import org.json.JSONObject
@@ -55,6 +63,7 @@ fun NewsComposeApp(viewModel: MainViewModel, trackerController: TrackerControlle
                 ComposeSearchBar(
                     modifier = Modifier,
                     onSearchTextChange = viewModel::onSearchTextChange,
+                    onSettingsSelected = viewModel::onSettingsClicked,
                     keyboardController = keyboardController
                 )
                 ArticlesContent(
@@ -74,6 +83,7 @@ fun NewsComposeApp(viewModel: MainViewModel, trackerController: TrackerControlle
 fun ComposeSearchBar(
     modifier: Modifier = Modifier,
     onSearchTextChange: (String, Boolean) -> Unit,
+    onSettingsSelected: (Boolean) -> Unit,
     keyboardController: SoftwareKeyboardController?,
 ) {
 
@@ -81,28 +91,45 @@ fun ComposeSearchBar(
         mutableStateOf("")
     }
 
-    OutlinedTextField(
-        value = searchText,
-        onValueChange = {
-            searchText = it
-            onSearchTextChange(searchText, false)
-        },
-        label = { Text(text = "Search Article") },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        singleLine = true,
-        keyboardActions = KeyboardActions(
-            onDone = {
-                onSearchTextChange(searchText, true)
-                keyboardController?.hide()
+    Row(
+        modifier = Modifier.height(IntrinsicSize.Min)
+    ) {
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = {
+                searchText = it
+                onSearchTextChange(searchText, false)
             },
-            onGo = {
-                onSearchTextChange(searchText, true)
-                keyboardController?.hide()
-            }
-        ),
-    )
+            label = { Text(text = "Search Article") },
+            modifier = modifier
+                .fillMaxWidth(0.9f)
+                .padding(8.dp),
+            singleLine = true,
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    onSearchTextChange(searchText, true)
+                    keyboardController?.hide()
+                },
+                onGo = {
+                    onSearchTextChange(searchText, true)
+                    keyboardController?.hide()
+                }
+            ),
+        )
+        IconButton(
+            modifier = modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            onClick = { onSettingsSelected(true) }) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_settings_24),
+                contentDescription = "settings",
+                modifier = modifier.fillMaxWidth().fillMaxHeight().padding(end = 8.dp),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+            )
+
+        }
+    }
 
 }
 
@@ -230,11 +257,17 @@ fun PrevArticleContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun TrackScreenView(trackerController: TrackerController?, screenName: String, additionalData: JSONObject = JSONObject()) {
-    DisposableEffect(key1 = Unit) {
-        trackerController?.trackCustomEvent(screenName, additionalData)
+fun TrackScreenView(
+    trackerController: TrackerController?,
+    screenName: String,
+) {
+    DisposableEffect(Unit) {
+        val json = JSONObject().also {
+            it.put("screen name", screenName)
+        }
+        trackerController?.trackCustomEvent("Screen View", json)
         onDispose {
-            // leave the screen
+            // screen exit
         }
     }
 }

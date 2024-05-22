@@ -1,6 +1,8 @@
 package com.example.newscomposeapp
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.newscomposeapp.data.Article
@@ -35,6 +37,9 @@ class MainViewModel @Inject constructor(repository: NewYorkTimesRepository): Vie
     private val _searchText = MutableStateFlow("")
     private val searchText: StateFlow<String> = _searchText
 
+    private val _openSecondActivity = MutableLiveData(false)
+    val openSecondActivity: LiveData<Boolean> = _openSecondActivity
+
     init {
         viewModelScope.launch {
             searchText.filter { newText ->
@@ -66,6 +71,10 @@ class MainViewModel @Inject constructor(repository: NewYorkTimesRepository): Vie
                 )
             }
         }
+    }
+
+    fun onSettingsClicked(open: Boolean = false) {
+        _openSecondActivity.value = open
     }
 
 
